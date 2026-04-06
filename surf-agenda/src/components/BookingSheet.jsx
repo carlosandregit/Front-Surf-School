@@ -1,17 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 
 export default function BookingSheet({ open, slot, onClose, onConfirm }) {
-
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-
-
-//   useEffect(() => {
-//   if (open) {
-//     setStudentName("");
-//     setStudentPhone("");
-//   }
-// }, [open, slot?.id]);
+  const [tipoReserva, setTipoReserva] = useState("AVULSA");
 
   const canSubmit = useMemo(() => {
     return name.trim().length >= 2 && digitsOnly(phone).length >= 10;
@@ -30,7 +22,9 @@ export default function BookingSheet({ open, slot, onClose, onConfirm }) {
       <div className="fixed inset-x-0 bottom-0 rounded-t-3xl bg-white p-5 shadow-2xl sm:inset-0 sm:m-auto sm:max-w-md sm:rounded-2xl">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <div className="text-base font-extrabold text-slate-900">Confirmar agendamento</div>
+            <div className="text-base font-extrabold text-slate-900">
+              Confirmar agendamento
+            </div>
             <div className="mt-1 text-sm text-slate-600">
               {slot.date} • {slot.time}
             </div>
@@ -45,6 +39,44 @@ export default function BookingSheet({ open, slot, onClose, onConfirm }) {
         </div>
 
         <div className="mt-4 space-y-3">
+          <div>
+            <label className="text-xs font-semibold text-slate-700">
+              Tipo de agendamento
+            </label>
+
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setTipoReserva("AVULSA")}
+                className={[
+                  "rounded-xl border px-3 py-3 text-sm font-semibold transition",
+                  tipoReserva === "AVULSA"
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-sky-100 bg-white text-slate-700 hover:bg-sky-50",
+                ].join(" ")}
+              >
+                Agendamento avulsa
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setTipoReserva("PACOTE")}
+                className={[
+                  "rounded-xl border px-3 py-3 text-sm font-semibold transition",
+                  tipoReserva === "PACOTE"
+                    ? "border-slate-900 bg-slate-900 text-white"
+                    : "border-sky-100 bg-white text-slate-700 hover:bg-sky-50",
+                ].join(" ")}
+              >
+                Agendamento pacote
+              </button>
+            </div>
+
+            <div className="mt-2 text-xs text-slate-500">
+              Em pacote, o sistema valida se o aluno existe e se há saldo disponível.
+            </div>
+          </div>
+
           <div>
             <label className="text-xs font-semibold text-slate-700">Nome</label>
             <input
@@ -72,9 +104,9 @@ export default function BookingSheet({ open, slot, onClose, onConfirm }) {
             disabled={!canSubmit}
             onClick={() =>
               onConfirm({
-                classSlotId: slot.id,
                 studentName: name.trim(),
                 studentPhone: digitsOnly(phone),
+                tipoReserva,
               })
             }
             className="mt-2 w-full rounded-xl bg-slate-900 py-3 text-sm font-extrabold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"

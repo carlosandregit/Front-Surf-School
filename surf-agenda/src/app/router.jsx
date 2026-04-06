@@ -10,16 +10,12 @@ import AdminGuard from "../components/AdminGuard";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: "/:slug",
     element: <App />,
     children: [
       { index: true, element: <Schedule /> },
       { path: "meus-agendamentos", element: <MyBookings /> },
-
-      // login do admin
       { path: "admin/login", element: <AdminLogin /> },
-
-      // área admin protegida
       {
         element: <AdminGuard />,
         children: [{ path: "admin", element: <Admin /> }],

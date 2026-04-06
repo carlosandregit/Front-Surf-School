@@ -3,7 +3,7 @@ import AdminSlotCard from "../components/AdminSlotCard";
 import AdminAddBookingSheet from "../components/AdminAddBookingSheet";
 
 import { buildMockWeek, CAPACITY } from "../mocks/scheduleMock";
-import { getWeekStartISO } from "../utils/week";
+// import { getWeekStartISO } from "../utils/week";
 
 import { addBooking, adminRemoveBooking, listBookings } from "../services/bookingsStore";
 import { isSlotLocked, toggleSlotLocked } from "../services/slotLocksStore";
@@ -12,9 +12,9 @@ export default function Admin() {
   const todayISO = useMemo(() => toISODate(new Date()), []);
   const [selectedDateISO, setSelectedDateISO] = useState(todayISO);
 
-  const weekStartISO = useMemo(() => getWeekStartISO(new Date(selectedDateISO + "T00:00:00")), [
-    selectedDateISO,
-  ]);
+  // const weekStartISO = useMemo(() => getWeekStartISO(new Date(selectedDateISO + "T00:00:00")), [
+  //   selectedDateISO,
+  // ]);
 
   const week = useMemo(() => buildMockWeek(weekStartISO), [weekStartISO]);
 
