@@ -6,7 +6,7 @@ import BookingSheet from "../components/BookingSheet";
 import DaySwitcher from "../components/DaySwitcher";
 import { consultarAgendaDia } from "../services/agenda";
 import { criarAgendamento } from "../services/agendamento";
-import { addDaysISO, getTodayISO } from "../utils/week";
+import { addDaysISO, getTodayISO } from "../utils/data";
 
 export default function Schedule() {
   const { slug } = useParams();
@@ -46,7 +46,7 @@ export default function Schedule() {
         queryKey: ["agendaDia", slug, dataSelecionada],
       });
     },
-
+    
     onError: (erro) => {
       alert(erro.message || "Erro ao confirmar agendamento.");
     },

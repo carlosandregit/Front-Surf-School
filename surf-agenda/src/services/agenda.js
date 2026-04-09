@@ -54,42 +54,32 @@ export async function consultarAgendaDia({ slug, dataDoAgendamento }) {
   };
 }
 
-// export async function consultarAgendaSemana({ slug, inicioDaSemanaISO }) {
-//   const datasDaSemana = Array.from({ length: 7 }, (_, i) =>
-//     adicionarDias(inicioDaSemanaISO, i)
-//   );
+export async function consultarAgendamentoDoDia({
+  idEscolinha,
+  dataDoAgendamento,
+  status = null,
+  telefoneAluno = null,
+}) {
+  const response = await api.post("/Agenda/Dia", {
+    idEscolinha,
+    dataDoAgendamento,
+    status,
+    telefoneAluno,
+  });
 
-//   const respostas = await Promise.all(
-//     datasDaSemana.map((dataDoAgendamento) =>
-//       consultarAgendaDia({ slug, dataDoAgendamento })
-//     )
-//   );
+  return response.data.map((item) => ({
+    idAgendamento: item.idAgendamento,
+    dataDoAgendamento: item.dataDoAgendamento,
+    hora: item.hora,
+    nomeAluno: item.nomeAluno,
+    telefoneAluno: item.telefoneAluno,
+    tipoReserva: item.tipoReserva,
+    status: item.status,
+    codigoCancelamento: item.codigoCancelamento,
+    criadoEm: item.criadoEm,
+    canceladoEm: item.canceladoEm,
+    canceladoPor: item.canceladoPor,
+    motivoCancelamento: item.motivoCancelamento,
+  }));
+}
 
-//   return {
-//     days: respostas.map((dia) => ({
-//       dateISO: dia.dataDoAgendamento,
-//       dayLabel: formatarRotuloDia(dia.dataDoAgendamento),
-//       idEscolinha: dia.idEscolinha,
-//       nomeEscolinha: dia.nomeEscolinha,
-//       slug: dia.slug,
-//       slots: dia.horarios.map((horario) => {
-//         const capacity = horario.limiteVagas;
-//         const bookedCount = horario.quantidadeConfirmados;
-//         const remaining = Math.max(0, capacity - bookedCount);
-
-//         return {
-//           id: `${dia.idEscolinha}_${dia.dataDoAgendamento}_${horario.hora}`,
-//           idEscolinha: dia.idEscolinha,
-//           date: dia.dataDoAgendamento,
-//           time: horario.hora,
-//           capacity,
-//           bookedCount,
-//           remaining,
-//           isLocked: horario.bloqueado,
-//           isFull: !horario.disponivel && !horario.bloqueado,
-//           disponivel: horario.disponivel,
-//         };
-//       }),
-//     })),
-//   };
-// }

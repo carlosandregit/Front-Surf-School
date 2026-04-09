@@ -1,341 +1,264 @@
 import React, { useMemo, useState } from "react";
+import { useOutletContext } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-
+import {
+  consultarAgendamentosDoAluno,
+  cancelarAgendamento,
+} from "../services/agendamento";
 import CancelSheet from "../components/CancelSheet";
-import { canCancelNow } from "../services/bookingsStore";
-import { isAdminAuthenticated } from "../services/adminAuth";
-
-import { qk } from "../app/queryKeys";
-import { getBookingsAdmin, getBookingsByPhone, cancelBookingMock } from "../services/mockApi";
 
 export default function MyBookings() {
+  const { escolinha } = useOutletContext();
   const queryClient = useQueryClient();
 
-  const isAdmin = isAdminAuthenticated();
+  const [telefone, setTelefone] = useState("");
+  const telefoneDigits = useMemo(() => digitsOnly(telefone), [telefone]);
 
-  // -----------------------
-  // Aluno (telefone)
-  // -----------------------
-  const [phone, setPhone] = useState("");
-  const phoneDigits = useMemo(() => digitsOnly(phone), [phone]);
-  const [searchedPhone, setSearchedPhone] = useState("");
+  const [dataSelecionada, setDataSelecionada] = useState("");
+  const [filtroAplicado, setFiltroAplicado] = useState({
+    telefone: "",
+    data: "",
+  });
+  const [buscou, setBuscou] = useState(false);
 
-  // -----------------------
-  // Admin (período + telefone opcional)
-  // -----------------------
-  const [fromISO, setFromISO] = useState("");
-  const [toISO, setToISO] = useState("");
-  const [adminPhone, setAdminPhone] = useState("");
-  const adminPhoneDigits = useMemo(() => digitsOnly(adminPhone), [adminPhone]);
-  const [adminSubmitted, setAdminSubmitted] = useState(false);
-
-  const adminQueryEnabled =
-    isAdmin && adminSubmitted && isValidISODate(fromISO) && isValidISODate(toISO);
-
-  // -----------------------
-  // Cancelamento (sheet aluno)
-  // -----------------------
   const [cancelOpen, setCancelOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState(null);
+  const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
 
-  // -----------------------
-  // Queries
-  // -----------------------
-  const studentBookingsQuery = useQuery({
-    queryKey: qk.bookingsByPhone(searchedPhone),
-    queryFn: () => getBookingsByPhone(searchedPhone),
-    enabled: !isAdmin && searchedPhone.length >= 10,
+  const consultaHabilitada =
+    !!escolinha?.idEscolinha &&
+    isValidISODate(filtroAplicado.data) &&
+    filtroAplicado.telefone.length >= 10;
+
+  const agendamentosQuery = useQuery({
+    queryKey: [
+      "agendamentos-aluno",
+      escolinha?.idEscolinha,
+      filtroAplicado.data,
+      filtroAplicado.telefone,
+    ],
+    queryFn: () =>
+      consultarAgendamentosDoAluno({
+        idEscolinha: escolinha.idEscolinha,
+        data: filtroAplicado.data,
+        telefone: filtroAplicado.telefone,
+      }),
+    enabled: consultaHabilitada,
+    retry: false,
   });
 
-  const adminBookingsQuery = useQuery({
-    queryKey: qk.adminBookings({ fromISO, toISO, phoneDigits: adminPhoneDigits }),
-    queryFn: () => getBookingsAdmin({ fromISO, toISO, phoneDigits: adminPhoneDigits }),
-    enabled: adminQueryEnabled,
-  });
-
-  // -----------------------
-  // Mutations (aluno)
-  // -----------------------
-  const cancelMutation = useMutation({
-    mutationFn: (payload) => cancelBookingMock(payload),
-    onSuccess: () => {
-      alert("✔ Aula cancelada com sucesso. Vaga liberada.");
-
-      if (searchedPhone) {
-        queryClient.invalidateQueries({ queryKey: qk.bookingsByPhone(searchedPhone) });
-      }
-
-      queryClient.invalidateQueries({ queryKey: ["scheduleWeek"] });
+  const cancelarMutation = useMutation({
+    mutationFn: cancelarAgendamento,
+    onSuccess: (resposta) => {
+      alert(resposta?.mensagem || "Agendamento cancelado com sucesso.");
 
       setCancelOpen(false);
-      setSelectedBooking(null);
+      setAgendamentoSelecionado(null);
+
+      queryClient.invalidateQueries({
+        queryKey: [
+          "agendamentos-aluno",
+          escolinha?.idEscolinha,
+          filtroAplicado.data,
+          filtroAplicado.telefone,
+        ],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ["agendaDia"],
+      });
     },
-    onError: (err) => alert(err.message),
+    onError: (erro) => {
+      alert(erro.message || "Erro ao cancelar agendamento.");
+    },
   });
 
-  // -----------------------
-  // Handlers
-  // -----------------------
-  function handleStudentSearch() {
-    const digits = phoneDigits;
-
-    if (digits.length < 10) {
-      alert("Digite um telefone válido (com DDD).");
-      setSearchedPhone("");
+  function handleBuscar() {
+    if (!escolinha?.idEscolinha) {
+      alert("Escolinha não carregada.");
       return;
     }
 
-    setSearchedPhone(digits);
+    if (!isValidISODate(dataSelecionada)) {
+      alert("Selecione uma data válida.");
+      return;
+    }
+
+    if (telefoneDigits.length < 10) {
+      alert("Digite um telefone válido com DDD.");
+      return;
+    }
+
+    setFiltroAplicado({
+      data: dataSelecionada,
+      telefone: telefoneDigits,
+    });
+
+    setBuscou(true);
   }
 
-  function handleAdminSearch() {
-    if (!isValidISODate(fromISO) || !isValidISODate(toISO)) {
-      alert("Selecione Data inicial e Data final.");
-      return;
-    }
-
-    if (adminPhoneDigits && adminPhoneDigits.length < 10) {
-      alert("Se for filtrar por telefone, digite um telefone válido (com DDD).");
-      return;
-    }
-
-    setAdminSubmitted(true);
-  }
-
-  function openCancel(booking) {
-    setSelectedBooking(booking);
+  function abrirCancelamento(agendamento) {
+    setAgendamentoSelecionado(agendamento);
     setCancelOpen(true);
   }
 
-  function closeCancel() {
+  function fecharCancelamento() {
+    if (cancelarMutation.isPending) return;
     setCancelOpen(false);
-    setSelectedBooking(null);
+    setAgendamentoSelecionado(null);
   }
 
-  // -----------------------
-  // Dados
-  // -----------------------
-  const studentResults = studentBookingsQuery.data || [];
-  const adminResults = adminBookingsQuery.data || [];
+  const resultados = Array.isArray(agendamentosQuery.data)
+    ? agendamentosQuery.data
+    : [];
 
   return (
     <section className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-extrabold text-slate-900">
-            {isAdmin ? "Agendamentos (Admin)" : "Meus agendamentos"}
-          </h1>
-          <p className="mt-1 text-sm text-slate-600">
-            {isAdmin
-              ? "Busque por período e, se quiser, filtre por telefone. (Confirmados e cancelados juntos)"
-              : "Informe seu telefone para consultar. Para cancelar, você precisa do seu código."}
-          </p>
+      <div>
+        <h1 className="text-xl font-extrabold text-slate-900">
+          Meus agendamentos
+        </h1>
+        <p className="mt-1 text-sm text-slate-600">
+          Informe a data e seu telefone para consultar suas aulas.
+        </p>
+      </div>
+
+      <div className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
+        <div className="grid gap-3 sm:grid-cols-2">
+          <div>
+            <label className="text-xs font-semibold text-slate-700">Data</label>
+            <input
+              type="date"
+              value={dataSelecionada}
+              onChange={(e) => setDataSelecionada(e.target.value)}
+              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-700">
+              Telefone
+            </label>
+            <input
+              value={telefone}
+              onChange={(e) => setTelefone(e.target.value)}
+              placeholder="DDD + número"
+              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+            />
+          </div>
         </div>
 
-        {isAdmin ? (
-          <span className="inline-flex items-center rounded-full bg-sky-50 px-3 py-1 text-xs font-extrabold text-sky-700">
-            Admin 🌊
-          </span>
+        <button
+          onClick={handleBuscar}
+          className="mt-4 w-full rounded-xl bg-slate-900 py-3 text-sm font-extrabold text-white hover:bg-slate-800"
+        >
+          Buscar agendamentos
+        </button>
+
+        {buscou ? (
+          <div className="mt-3 text-xs text-slate-500">
+            Consulta para{" "}
+            <span className="font-mono font-semibold">
+              {filtroAplicado.telefone}
+            </span>{" "}
+            em{" "}
+            <span className="font-semibold">
+              {formatDateBR(filtroAplicado.data)}
+            </span>
+          </div>
         ) : null}
       </div>
 
-      {/* =========================
-          MODO ADMIN (apenas)
-         ========================= */}
-      {isAdmin ? (
-        <div className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
-          <div className="mt-1 grid gap-3 sm:grid-cols-2">
-            <div>
-              <label className="text-xs font-semibold text-slate-700">Data inicial</label>
-              <input
-                type="date"
-                value={fromISO}
-                onChange={(e) => {
-                  setFromISO(e.target.value);
-                  setAdminSubmitted(false);
-                }}
-                className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
-              />
-            </div>
+      {!buscou ? (
+        <div className="rounded-2xl border border-sky-100 bg-sky-50/50 p-4 text-sm text-slate-700 shadow-sm">
+          Informe a data e o telefone para consultar seus agendamentos.
+        </div>
+      ) : agendamentosQuery.isFetching ? (
+        <div className="rounded-2xl border border-sky-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
+          Carregando...
+        </div>
+      ) : agendamentosQuery.isError ? (
+        <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-sm text-red-700 shadow-sm">
+          {agendamentosQuery.error?.message ||
+            "Erro ao consultar agendamentos."}
+        </div>
+      ) : resultados.length === 0 ? (
+        <div className="rounded-2xl border border-sky-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
+          Nenhum agendamento encontrado para esta data e telefone.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {resultados.map((agendamento) => (
+            <div
+              key={agendamento.idAgendamento}
+              className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-sm font-extrabold text-slate-900">
+                    {formatDateBR(agendamento.dataDoAgendamento)} •{" "}
+                    {agendamento.hora}
+                  </div>
 
-            <div>
-              <label className="text-xs font-semibold text-slate-700">Data final</label>
-              <input
-                type="date"
-                value={toISO}
-                onChange={(e) => {
-                  setToISO(e.target.value);
-                  setAdminSubmitted(false);
-                }}
-                className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
-              />
-            </div>
+                  <div className="mt-1 text-sm text-slate-600">
+                    {agendamento.nomeAluno}
+                  </div>
 
-            <div className="sm:col-span-2">
-              <label className="text-xs font-semibold text-slate-700">Telefone (opcional)</label>
-              <input
-                value={adminPhone}
-                onChange={(e) => {
-                  setAdminPhone(e.target.value);
-                  setAdminSubmitted(false);
-                }}
-                placeholder="DDD + número (opcional)"
-                className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
-              />
-            </div>
-          </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <span className="inline-flex rounded-full bg-sky-50 px-2 py-1 text-xs font-semibold text-sky-700">
+                      {agendamento.tipoReserva}
+                    </span>
 
-          <button
-            onClick={handleAdminSearch}
-            className="mt-4 w-full rounded-xl bg-slate-900 py-3 text-sm font-extrabold text-white hover:bg-slate-800"
-          >
-            Buscar (Admin) 🏄🏽
-          </button>
-
-          <div className="mt-4 space-y-3">
-            {adminBookingsQuery.isFetching ? (
-              <div className="rounded-2xl border border-sky-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-                Carregando…
-              </div>
-            ) : adminQueryEnabled && adminResults.length === 0 ? (
-              <div className="rounded-2xl border border-sky-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-                Nenhum agendamento encontrado nesse período.
-              </div>
-            ) : adminQueryEnabled ? (
-              adminResults.map((b) => (
-                <div key={b.id} className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-extrabold text-slate-900">
-                        {formatDateBR(b.dateISO)} • {b.time}
-                      </div>
-                      <div className="mt-1 text-sm text-slate-700">{b.studentName}</div>
-                      <div className="mt-1 text-xs font-mono text-slate-500">{b.studentPhone}</div>
-
-                      <div className="mt-2">
-                        {b.status === "CONFIRMED" ? (
-                          <span className="inline-flex rounded-full bg-sky-50 px-2 py-1 text-xs font-semibold text-sky-700">
-                            Confirmado
-                          </span>
-                        ) : (
-                          <span className="inline-flex rounded-full bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-700">
-                            Cancelado
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <span
+                      className={[
+                        "inline-flex rounded-full px-2 py-1 text-xs font-semibold",
+                        agendamento.status === "CONFIRMADO"
+                          ? "bg-sky-50 text-sky-700"
+                          : "bg-slate-50 text-slate-700",
+                      ].join(" ")}
+                    >
+                      {agendamento.status}
+                    </span>
                   </div>
                 </div>
-              ))
-            ) : (
-              <div className="rounded-2xl border border-sky-100 bg-sky-50/50 p-4 text-sm text-slate-700 shadow-sm">
-                Preencha o período e clique em <span className="font-semibold">Buscar (Admin)</span>.
-              </div>
-            )}
-          </div>
-        </div>
-      ) : null}
 
-      {/* =========================
-          MODO ALUNO (apenas)
-         ========================= */}
-      {!isAdmin ? (
-        <>
-          <div className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
-            <label className="text-xs font-semibold text-slate-700">Telefone</label>
-            <div className="mt-2 flex gap-2">
-              <input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="DDD + número"
-                className="w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
-              />
-              <button
-                onClick={handleStudentSearch}
-                className="shrink-0 rounded-xl bg-slate-900 px-4 py-3 text-sm font-extrabold text-white hover:bg-slate-800"
-              >
-                Buscar
-              </button>
-            </div>
-
-            {searchedPhone ? (
-              <div className="mt-3 text-xs text-slate-500">
-                Resultados para:{" "}
-                <span className="font-mono font-semibold">{searchedPhone}</span>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="space-y-3">
-            {studentBookingsQuery.isFetching ? (
-              <div className="rounded-2xl border border-sky-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-                Carregando…
-              </div>
-            ) : searchedPhone && studentResults.length === 0 ? (
-              <div className="rounded-2xl border border-sky-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
-                Nenhum agendamento encontrado para este telefone.
-              </div>
-            ) : (
-              studentResults.map((b) => {
-                const cancelCheck = canCancelNow({ dateISO: b.dateISO, time: b.time });
-                const canCancel = b.status === "CONFIRMED" && cancelCheck.ok;
-
-                return (
-                  <div key={b.id} className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-sm font-extrabold text-slate-900">
-                          {formatDateBR(b.dateISO)} • {b.time}
-                        </div>
-                        <div className="mt-1 text-sm text-slate-600">{b.studentName}</div>
-
-                        <div className="mt-2">
-                          {b.status === "CONFIRMED" ? (
-                            <span className="inline-flex rounded-full bg-sky-50 px-2 py-1 text-xs font-semibold text-sky-700">
-                              Confirmado
-                            </span>
-                          ) : (
-                            <span className="inline-flex rounded-full bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-700">
-                              Cancelado
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        {b.status === "CONFIRMED" ? (
-                          <>
-                            <button
-                              onClick={() => openCancel(b)}
-                              className="rounded-xl border border-sky-100 px-3 py-2 text-sm font-semibold hover:bg-sky-50"
-                            >
-                              Cancelar
-                            </button>
-
-                            {!canCancel ? (
-                              <div className="mt-2 text-xs text-slate-500">Prazo expirado. Só admin.</div>
-                            ) : (
-                              <div className="mt-2 text-xs text-slate-500">Cancelamento liberado ✅</div>
-                            )}
-                          </>
-                        ) : null}
-                      </div>
-                    </div>
+                <div className="text-right">
+                  <div className="text-[11px] uppercase tracking-wide text-slate-400">
+                    Código
                   </div>
-                );
-              })
-            )}
-          </div>
+                  <div className="mt-1 font-mono text-xs text-slate-600">
+                    {agendamento.codigoCancelamento}
+                  </div>
 
-          <CancelSheet
-            open={cancelOpen}
-            booking={selectedBooking}
-            phoneDigits={searchedPhone}
-            onClose={closeCancel}
-            onConfirm={(payload) => cancelMutation.mutate(payload)}
-          />
-        </>
-      ) : null}
+                  {agendamento.status === "CONFIRMADO" ? (
+                    <button
+                      onClick={() => abrirCancelamento(agendamento)}
+                      className="mt-3 rounded-xl border border-sky-100 px-3 py-2 text-sm font-semibold hover:bg-sky-50"
+                    >
+                      Cancelar
+                    </button>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <CancelSheet
+        open={cancelOpen}
+        booking={agendamentoSelecionado}
+        onClose={fecharCancelamento}
+        carregando={cancelarMutation.isPending}
+        onConfirm={(payload) => {
+          if (!escolinha?.idEscolinha) return;
+
+          cancelarMutation.mutate({
+            idEscolinha: escolinha.idEscolinha,
+            codigoCancelamento: payload.codigoCancelamento,
+            motivoCancelamento: payload.motivoCancelamento,
+          });
+        }}
+      />
     </section>
   );
 }
@@ -345,7 +268,8 @@ function digitsOnly(v) {
 }
 
 function formatDateBR(iso) {
-  const d = new Date(iso + "T00:00:00");
+  if (!iso) return "";
+  const d = new Date(`${iso}T00:00:00`);
   return d.toLocaleDateString("pt-BR");
 }
 

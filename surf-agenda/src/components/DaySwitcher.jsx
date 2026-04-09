@@ -1,5 +1,5 @@
 import React from "react";
-import { formatarFaixaData } from "../utils/week";
+import { formatarFaixaData } from "../utils/data";
 
 export default function DaySwitcher({ dataSelecionada, onPrev, onNext }) {
   return (

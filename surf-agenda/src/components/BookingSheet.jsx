@@ -3,11 +3,11 @@ import React, { useMemo, useState } from "react";
 export default function BookingSheet({ open, slot, onClose, onConfirm }) {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
-  const [tipoReserva, setTipoReserva] = useState("AVULSA");
+  const [tipoReserva, setTipoReserva] = useState("");
 
   const canSubmit = useMemo(() => {
-    return name.trim().length >= 2 && digitsOnly(phone).length >= 10;
-  }, [name, phone]);
+    return name.trim().length >= 2 && digitsOnly(phone).length >= 10 && tipoReserva.length >= 6;
+  }, [name, phone, tipoReserva]);
 
   if (!open || !slot) return null;
 
@@ -39,46 +39,10 @@ export default function BookingSheet({ open, slot, onClose, onConfirm }) {
         </div>
 
         <div className="mt-4 space-y-3">
-          <div>
-            <label className="text-xs font-semibold text-slate-700">
-              Tipo de agendamento
-            </label>
-
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setTipoReserva("AVULSA")}
-                className={[
-                  "rounded-xl border px-3 py-3 text-sm font-semibold transition",
-                  tipoReserva === "AVULSA"
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-sky-100 bg-white text-slate-700 hover:bg-sky-50",
-                ].join(" ")}
-              >
-                Agendamento avulsa
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setTipoReserva("PACOTE")}
-                className={[
-                  "rounded-xl border px-3 py-3 text-sm font-semibold transition",
-                  tipoReserva === "PACOTE"
-                    ? "border-slate-900 bg-slate-900 text-white"
-                    : "border-sky-100 bg-white text-slate-700 hover:bg-sky-50",
-                ].join(" ")}
-              >
-                Agendamento pacote
-              </button>
-            </div>
-
-            <div className="mt-2 text-xs text-slate-500">
-              Em pacote, o sistema valida se o aluno existe e se há saldo disponível.
-            </div>
-          </div>
+          
 
           <div>
-            <label className="text-xs font-semibold text-slate-700">Nome</label>
+            <label className="text-xs font-semibold text-slate-700"><strong>Nome</strong></label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -88,17 +52,50 @@ export default function BookingSheet({ open, slot, onClose, onConfirm }) {
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-700">Telefone</label>
-            <input
+            <label className="text-xs font-semibold text-slate-700"><strong>Telefone</strong></label>
+            {/* <input
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="DDD + número"
               className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+            /> */}
+            {/* para aceitar apenas numeros */}
+            <input
+                value={phone}
+                onChange={(e) => {
+                  const apenasNumeros = e.target.value.replace(/\D/g, '');
+                  setPhone(apenasNumeros);
+                }}
+                placeholder="DDD + número"
+                type="tel"
+                inputMode="numeric"
+                className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
             />
             <div className="mt-2 text-xs text-slate-500">
               Usaremos seu telefone para você consultar e cancelar dentro do prazo.
             </div>
           </div>
+
+          <div>
+            <label className="text-xs font-semibold text-slate-700">
+              <strong>Modelo de agendamento</strong>
+            </label>            
+
+            {/* <div className="mt-2 text-xs text-slate-500">
+              Em pacote, o sistema valida se o aluno existe e se há saldo disponível.
+            </div> */}
+          </div>
+
+          <div >
+                  {/* className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-4 text-lg font-semibold text-gray-800 outline-none transition-all duration-200 focus:border-gray-300 focus:bg-white focus:ring-2 focus:ring-gray-200" */}
+                <select className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-4 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+                  value={tipoReserva} onChange={(e) => setTipoReserva(e.target.value)}>
+                  <option value=""  className="text-base font-normal text-gray-400">Selecione uma opção</option>
+                  <option value="PACOTE" className="text-sm font-bold text-gray-500">PACOTE</option>
+                  <option value="AVULSA" className="text-sm font-bold text-gray-500">AVULSA</option>
+              </select>
+              
+            </div>
 
           <button
             disabled={!canSubmit}
@@ -114,12 +111,12 @@ export default function BookingSheet({ open, slot, onClose, onConfirm }) {
             Confirmar 🌊
           </button>
 
-          <div className="rounded-xl border border-sky-100 bg-sky-50/60 p-3 text-xs text-slate-700">
+          {/* <div className="rounded-xl border border-sky-100 bg-sky-50/60 p-3 text-xs text-slate-700">
             <div className="font-semibold">Regras de cancelamento</div>
             <div className="mt-1">
               6h e 8h: até 20h do dia anterior • Outros: até 2h antes.
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>
