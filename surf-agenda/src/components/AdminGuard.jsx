@@ -1,13 +1,19 @@
 import React from "react";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import {
+  Navigate,
+  Outlet,
+  useOutletContext,
+  useParams,
+} from "react-router-dom";
 import { isAdminAuthenticated } from "../services/adminAuth";
 
 export default function AdminGuard() {
-  const location = useLocation();
+  const { slug } = useParams();
+  const contextoPai = useOutletContext();
 
   if (!isAdminAuthenticated()) {
-    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+    return <Navigate to={`/${slug}/admin/login`} replace />;
   }
 
-  return <Outlet />;
+  return <Outlet context={contextoPai} />;
 }

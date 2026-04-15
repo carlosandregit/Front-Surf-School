@@ -36,12 +36,12 @@ export async function consultarAgendamentosDoAluno({
 
 export async function cancelarAgendamento({
   idEscolinha,
-  codigoCancelamento,
+  idAgendamento,
   motivoCancelamento = null,
 }) {
   const response = await api.post("/Agendamento/Cancelar", {
     idEscolinha,
-    codigoCancelamento,
+    idAgendamento,
     motivoCancelamento,
   });
 

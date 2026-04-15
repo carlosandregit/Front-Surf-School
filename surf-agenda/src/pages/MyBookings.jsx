@@ -139,7 +139,7 @@ export default function MyBookings() {
               Telefone
             </label>
             <input
-              value={telefone}
+               value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
               placeholder="DDD + número"
               className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
@@ -250,11 +250,13 @@ export default function MyBookings() {
         onClose={fecharCancelamento}
         carregando={cancelarMutation.isPending}
         onConfirm={(payload) => {
-          if (!escolinha?.idEscolinha) return;
+          if (!escolinha?.idEscolinha || !agendamentoSelecionado?.idAgendamento) {
+            return;
+          }
 
           cancelarMutation.mutate({
             idEscolinha: escolinha.idEscolinha,
-            codigoCancelamento: payload.codigoCancelamento,
+            idAgendamento: agendamentoSelecionado.idAgendamento,
             motivoCancelamento: payload.motivoCancelamento,
           });
         }}

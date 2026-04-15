@@ -67,19 +67,7 @@ export async function consultarAgendamentoDoDia({
     telefoneAluno,
   });
 
-  return response.data.map((item) => ({
-    idAgendamento: item.idAgendamento,
-    dataDoAgendamento: item.dataDoAgendamento,
-    hora: item.hora,
-    nomeAluno: item.nomeAluno,
-    telefoneAluno: item.telefoneAluno,
-    tipoReserva: item.tipoReserva,
-    status: item.status,
-    codigoCancelamento: item.codigoCancelamento,
-    criadoEm: item.criadoEm,
-    canceladoEm: item.canceladoEm,
-    canceladoPor: item.canceladoPor,
-    motivoCancelamento: item.motivoCancelamento,
-  }));
+  return response.data;
+ 
 }
 

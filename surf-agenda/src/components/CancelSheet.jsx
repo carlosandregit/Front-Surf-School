@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 export default function CancelSheet({
   open,
@@ -7,19 +7,13 @@ export default function CancelSheet({
   onConfirm,
   carregando = false,
 }) {
-  const [code, setCode] = useState("");
   const [motivo, setMotivo] = useState("");
 
   useEffect(() => {
     if (open) {
-      setCode("");
       setMotivo("");
     }
   }, [open, booking?.idAgendamento]);
-
-  const canSubmit = useMemo(() => {
-    return String(code).trim().length >= 4;
-  }, [code]);
 
   if (!open || !booking) return null;
 
@@ -58,18 +52,6 @@ export default function CancelSheet({
 
           <div>
             <label className="text-xs font-semibold text-slate-700">
-              Código de cancelamento
-            </label>
-            <input
-              value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="Ex.: 37A78DC753"
-              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm font-mono outline-none focus:ring-2 focus:ring-sky-200"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs font-semibold text-slate-700">
               Motivo (opcional)
             </label>
             <textarea
@@ -81,10 +63,9 @@ export default function CancelSheet({
           </div>
 
           <button
-            disabled={!canSubmit || carregando}
+            disabled={carregando}
             onClick={() =>
               onConfirm({
-                codigoCancelamento: code.trim(),
                 motivoCancelamento: motivo.trim() || null,
               })
             }

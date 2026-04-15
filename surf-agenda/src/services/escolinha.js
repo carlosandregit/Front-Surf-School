@@ -7,3 +7,17 @@ export async function obterEscolinhaPorSlug(slug) {
 
   return response.data;
 }
+
+export async function bloquearHorario({
+  idEscolinha,
+  dataDoBloqueio,
+  hora,
+}) {
+  const response = await api.post("/Bloquear-Horario", {
+    idEscolinha,
+    dataDoBloqueio,
+    hora,
+  });
+
+  return response.data;
+}

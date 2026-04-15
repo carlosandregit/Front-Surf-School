@@ -1,18 +1,54 @@
-// src/services/adminAuth.js
-const KEY = "surf_admin_token_v1";
+import { api } from "./api";
 
-export function setAdminToken(token) {
-  localStorage.setItem(KEY, token);
+const CHAVE_ADMIN = "admin_session";
+
+export async function loginAdmin({ idEscolinha, email, dataNascimento }) {
+  const response = await api.post("/Admin/Usuario", {
+    idEscolinha,
+    email,
+    dataNascimento,
+  });
+
+  const usuario = response.data;
+
+  if (!usuario) {
+    throw new Error("Usuário admin não encontrado.");
+  }
+
+  if (!usuario.ativo) {
+    throw new Error("Usuário admin inativo.");
+  }
+
+  const sessao = {
+    idUsuario: usuario.idUsuario,
+    idEscolinha: usuario.idEscolinha,
+    nomeUsuario: usuario.nomeUsuario,
+    email: usuario.email,
+    dtNascimento: usuario.dtNascimento,
+    ativo: usuario.ativo,
+  };
+
+  localStorage.setItem(CHAVE_ADMIN, JSON.stringify(sessao));
+
+  return sessao;
 }
 
-export function getAdminToken() {
-  return localStorage.getItem(KEY);
-}
+export function obterSessaoAdmin() {
+  const bruto = localStorage.getItem(CHAVE_ADMIN);
+  if (!bruto) return null;
 
-export function clearAdminToken() {
-  localStorage.removeItem(KEY);
+  try {
+    return JSON.parse(bruto);
+  } catch {
+    return null;
+  }
 }
 
 export function isAdminAuthenticated() {
-  return Boolean(getAdminToken());
+  const sessao = obterSessaoAdmin();
+  return !!sessao?.idUsuario && sessao?.ativo === true;
+}
+
+export function clearAdminToken() {
+  localStorage.removeItem(CHAVE_ADMIN);
 }
