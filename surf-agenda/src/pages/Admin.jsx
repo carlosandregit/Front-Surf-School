@@ -1,18 +1,18 @@
 import React, { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { cancelarAgendamentoAdmin } from "../services/admin";
+import { cancelarAgendamentoAdmin, criarAluno, atualizarSaldoAulas, } from "../services/admin";
 import { consultarAgendamentoDoDia, consultarAgendaDia } from "../services/agenda";
-import {  bloquearHorario, desbloquearHorario, } from "../services/escolinha";
+import { bloquearHorario, desbloquearHorario } from "../services/escolinha";
 import AdminCancelSheet from "../components/AdminCancelSheet";
+import DaySwitcher from "../components/DaySwitcher";
+import { addDaysISO, getTodayISO } from "../utils/data";
 
 export default function Admin() {
   const { escolinha } = useOutletContext();
   const queryClient = useQueryClient();
 
-  const hojeISO = useMemo(() => toISODate(new Date()), []);
-
-  const [dataSelecionada, setDataSelecionada] = useState(hojeISO);
+  const [dataSelecionada, setDataSelecionada] = useState(() => getTodayISO());
   const [statusSelecionado, setStatusSelecionado] = useState("");
   const [telefoneAluno, setTelefoneAluno] = useState("");
   const [filtroAplicado, setFiltroAplicado] = useState(null);
@@ -21,6 +21,15 @@ export default function Admin() {
   const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
 
   const [accordionAgendaOpen, setAccordionAgendaOpen] = useState(false);
+  const [accordionCadastroAlunoOpen, setAccordionCadastroAlunoOpen] = useState(false);
+  const [accordionSaldoOpen, setAccordionSaldoOpen] = useState(false);
+
+  const [nomeNovoAluno, setNomeNovoAluno] = useState("");
+  const [telefoneNovoAluno, setTelefoneNovoAluno] = useState("");
+  const [saldoNovoAluno, setSaldoNovoAluno] = useState("0");
+
+  const [telefoneSaldo, setTelefoneSaldo] = useState("");
+  const [novoSaldo, setNovoSaldo] = useState("");
 
   const agendaQuery = useQuery({
     queryKey: [
@@ -50,16 +59,15 @@ export default function Admin() {
       }),
     enabled: !!escolinha?.slug && !!dataSelecionada,
     retry: false,
+    placeholderData: (dadosAnteriores) => dadosAnteriores,
   });
 
   const cancelarAdminMutation = useMutation({
     mutationFn: cancelarAgendamentoAdmin,
     onSuccess: (resposta) => {
       alert(resposta?.mensagem || "Agendamento cancelado com sucesso.");
-
       setCancelOpen(false);
       setAgendamentoSelecionado(null);
-
       invalidarConsultas();
     },
     onError: (erro) => {
@@ -89,18 +97,37 @@ export default function Admin() {
     },
   });
 
+  const criarAlunoMutation = useMutation({
+    mutationFn: criarAluno,
+    onSuccess: (resposta) => {
+      alert(`Aluno cadastrado com sucesso.\n\nNome: ${resposta.nomeAluno}\nTelefone: ${resposta.telefoneAluno}`);
+      setNomeNovoAluno("");
+      setTelefoneNovoAluno("");
+      setSaldoNovoAluno("0");
+    },
+    onError: (erro) => {
+      alert(erro.message || "Erro ao cadastrar aluno.");
+    },
+  });
+
+  const atualizarSaldoMutation = useMutation({
+    mutationFn: atualizarSaldoAulas,
+    onSuccess: (resposta) => {
+      alert(
+        `Saldo atualizado com sucesso.\n\nNome: ${resposta.nomeAluno}\nTelefone: ${resposta.telefoneAluno}\nSaldo: ${resposta.quantidadeAulasDisponiveis}`
+      );
+      setTelefoneSaldo("");
+      setNovoSaldo("");
+    },
+    onError: (erro) => {
+      alert(erro.message || "Erro ao atualizar saldo.");
+    },
+  });
+
   function invalidarConsultas() {
-    queryClient.invalidateQueries({
-      queryKey: ["agenda-admin-dia"],
-    });
-
-    queryClient.invalidateQueries({
-      queryKey: ["agendaDia"],
-    });
-
-    queryClient.invalidateQueries({
-      queryKey: ["agendamentos-aluno"],
-    });
+    queryClient.invalidateQueries({ queryKey: ["agenda-admin-dia"] });
+    queryClient.invalidateQueries({ queryKey: ["agendaDia"] });
+    queryClient.invalidateQueries({ queryKey: ["agendamentos-aluno"] });
   }
 
   function handleBuscar() {
@@ -171,6 +198,72 @@ export default function Admin() {
     });
   }
 
+  function handlePrev() {
+    setDataSelecionada((atual) => addDaysISO(atual, -1));
+  }
+
+  function handleNext() {
+    setDataSelecionada((atual) => addDaysISO(atual, 1));
+  }
+
+  function handleCriarAluno() {
+    if (!escolinha?.idEscolinha) {
+      alert("Escolinha não carregada.");
+      return;
+    }
+
+    const telefoneLimpo = digitsOnly(telefoneNovoAluno);
+    const saldo = Number(saldoNovoAluno);
+
+    if (!nomeNovoAluno.trim()) {
+      alert("Informe o nome do aluno.");
+      return;
+    }
+
+    if (telefoneLimpo.length < 10) {
+      alert("Informe um telefone válido com DDD.");
+      return;
+    }
+
+    if (Number.isNaN(saldo) || saldo < 0) {
+      alert("Informe um saldo válido.");
+      return;
+    }
+
+    criarAlunoMutation.mutate({
+      idEscolinha: escolinha.idEscolinha,
+      nomeAluno: nomeNovoAluno.trim(),
+      telefoneAluno: telefoneLimpo,
+      quantidadeAulasDisponiveis: saldo,
+    });
+  }
+
+  function handleAtualizarSaldo() {
+    if (!escolinha?.idEscolinha) {
+      alert("Escolinha não carregada.");
+      return;
+    }
+
+    const telefoneLimpo = digitsOnly(telefoneSaldo);
+    const saldo = Number(novoSaldo);
+
+    if (telefoneLimpo.length < 10) {
+      alert("Informe um telefone válido com DDD.");
+      return;
+    }
+
+    if (Number.isNaN(saldo) || saldo < 0) {
+      alert("Informe um saldo válido.");
+      return;
+    }
+
+    atualizarSaldoMutation.mutate({
+      idEscolinha: escolinha.idEscolinha,
+      telefoneAluno: telefoneLimpo,
+      quantidadeAulasDisponiveis: saldo,
+    });
+  }
+
   const resultados = Array.isArray(agendaQuery.data) ? agendaQuery.data : [];
   const agendaHorarios = agendaHorariosQuery.data;
 
@@ -196,9 +289,7 @@ export default function Admin() {
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-slate-700">
-              Status
-            </label>
+            <label className="text-xs font-semibold text-slate-700">Status</label>
             <select
               value={statusSelecionado}
               onChange={(e) => setStatusSelecionado(e.target.value)}
@@ -214,16 +305,10 @@ export default function Admin() {
             <label className="text-xs font-semibold text-slate-700">
               Telefone (opcional)
             </label>
-            {/* <input
-              value={telefoneAluno}
-              onChange={(e) => setTelefoneAluno(e.target.value)}
-              placeholder="DDD + número"
-              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
-            /> */}
             <input
               value={telefoneAluno}
               onChange={(e) => {
-                const apenasNumeros = e.target.value.replace(/\D/g, '');
+                const apenasNumeros = e.target.value.replace(/\D/g, "");
                 setTelefoneAluno(apenasNumeros);
               }}
               placeholder="DDD + número"
@@ -293,8 +378,7 @@ export default function Admin() {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-sm font-extrabold text-slate-900">
-                    {formatDateBR(agendamento.dataDoAgendamento)} •{" "}
-                    {agendamento.hora}
+                    {formatDateBR(agendamento.dataDoAgendamento)} • {agendamento.hora}
                   </div>
 
                   <div className="mt-1 text-sm text-slate-700">
@@ -380,7 +464,7 @@ export default function Admin() {
 
         {accordionAgendaOpen ? (
           <div className="border-t border-sky-50 px-4 py-4">
-            {agendaHorariosQuery.isFetching ? (
+            {agendaHorariosQuery.isLoading && !agendaHorarios ? (
               <div className="text-sm text-slate-700">Carregando horários...</div>
             ) : agendaHorariosQuery.isError ? (
               <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
@@ -392,6 +476,16 @@ export default function Admin() {
               </div>
             ) : (
               <div className="space-y-3">
+                <DaySwitcher
+                  dataSelecionada={dataSelecionada}
+                  onPrev={handlePrev}
+                  onNext={handleNext}
+                />
+
+                {agendaHorariosQuery.isFetching ? (
+                  <div className="text-xs text-slate-500">Atualizando horários...</div>
+                ) : null}
+
                 {agendaHorarios.slots.map((slot) => (
                   <div
                     key={slot.id}
@@ -453,6 +547,147 @@ export default function Admin() {
                 ))}
               </div>
             )}
+          </div>
+        ) : null}
+      </div>
+
+      <div className="rounded-2xl border border-sky-100 bg-white shadow-sm">
+        <button
+          type="button"
+          onClick={() =>
+            setAccordionCadastroAlunoOpen((valorAtual) => !valorAtual)
+          }
+          className="flex w-full items-center justify-between px-4 py-4 text-left"
+        >
+          <div>
+            <div className="text-sm font-extrabold text-slate-900">
+              Cadastro de aluno
+            </div>
+            <div className="mt-1 text-xs text-slate-500">
+              Cadastre um novo aluno e defina o saldo inicial.
+            </div>
+          </div>
+
+          <span className="text-sm font-bold text-slate-500">
+            {accordionCadastroAlunoOpen ? "−" : "+"}
+          </span>
+        </button>
+
+        {accordionCadastroAlunoOpen ? (
+          <div className="border-t border-sky-50 px-4 py-4">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="sm:col-span-3">
+                <label className="text-xs font-semibold text-slate-700">
+                  Nome do aluno
+                </label>
+                <input
+                  value={nomeNovoAluno}
+                  onChange={(e) => setNomeNovoAluno(e.target.value)}
+                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700">
+                  Telefone
+                </label>
+                <input
+                  value={telefoneNovoAluno}
+                  onChange={(e) =>
+                    setTelefoneNovoAluno(e.target.value.replace(/\D/g, ""))
+                  }
+                  type="tel"
+                  inputMode="numeric"
+                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700">
+                  Saldo inicial
+                </label>
+                <input
+                  value={saldoNovoAluno}
+                  onChange={(e) =>
+                    setSaldoNovoAluno(e.target.value.replace(/\D/g, ""))
+                  }
+                  inputMode="numeric"
+                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleCriarAluno}
+              disabled={criarAlunoMutation.isPending}
+              className="mt-4 w-full rounded-xl bg-slate-900 py-3 text-sm font-extrabold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {criarAlunoMutation.isPending ? "Cadastrando..." : "Cadastrar aluno"}
+            </button>
+          </div>
+        ) : null}
+      </div>
+
+      <div className="rounded-2xl border border-sky-100 bg-white shadow-sm">
+        <button
+          type="button"
+          onClick={() => setAccordionSaldoOpen((valorAtual) => !valorAtual)}
+          className="flex w-full items-center justify-between px-4 py-4 text-left"
+        >
+          <div>
+            <div className="text-sm font-extrabold text-slate-900">
+              Atualizar saldo de aulas
+            </div>
+            <div className="mt-1 text-xs text-slate-500">
+              Atualize a quantidade de aulas disponíveis de um aluno.
+            </div>
+          </div>
+
+          <span className="text-sm font-bold text-slate-500">
+            {accordionSaldoOpen ? "−" : "+"}
+          </span>
+        </button>
+
+        {accordionSaldoOpen ? (
+          <div className="border-t border-sky-50 px-4 py-4">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-semibold text-slate-700">
+                  Telefone do aluno
+                </label>
+                <input
+                  value={telefoneSaldo}
+                  onChange={(e) =>
+                    setTelefoneSaldo(e.target.value.replace(/\D/g, ""))
+                  }
+                  type="tel"
+                  inputMode="numeric"
+                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-700">
+                  Novo saldo
+                </label>
+                <input
+                  value={novoSaldo}
+                  onChange={(e) =>
+                    setNovoSaldo(e.target.value.replace(/\D/g, ""))
+                  }
+                  inputMode="numeric"
+                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleAtualizarSaldo}
+              disabled={atualizarSaldoMutation.isPending}
+              className="mt-4 w-full rounded-xl bg-slate-900 py-3 text-sm font-extrabold text-white hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {atualizarSaldoMutation.isPending ? "Atualizando..." : "Atualizar saldo"}
+            </button>
           </div>
         ) : null}
       </div>

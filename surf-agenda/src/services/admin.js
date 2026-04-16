@@ -34,7 +34,7 @@ export async function buscarAlunoPorTelefone({
   return response.data;
 }
 
-export async function atualizarSaldoAlunoAdmin({
+export async function atualizarSaldoAulas({
   idEscolinha,
   telefoneAluno,
   quantidadeAulasDisponiveis,
@@ -48,7 +48,7 @@ export async function atualizarSaldoAlunoAdmin({
   return response.data;
 }
 
-export async function criarAlunoAdmin({
+export async function criarAluno({
   idEscolinha,
   nomeAluno,
   telefoneAluno,
