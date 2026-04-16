@@ -9,15 +9,22 @@ function Badge({ children }) {
 }
 
 export default function SlotRow({ slot, onBook }) {
- const remaining = slot.remaining ?? Math.max(0, (slot.capacity ?? 6) - (slot.bookedCount ?? 0));
+  const remaining =
+    slot.remaining ?? Math.max(0, (slot.capacity ?? 6) - (slot.bookedCount ?? 0));
+
+  const capacity = slot.capacity ?? 6;
+  const bookedCount = slot.bookedCount ?? 0;
   const isFull = slot.isFull ?? remaining === 0;
 
   return (
     <div className="flex items-center justify-between py-3">
-      <div className="flex items-baseline gap-3">
-        <div className="text-base font-semibold tabular-nums text-slate-900">{slot.time}</div>
+      <div className="flex flex-col gap-1">
+        <div className="text-base font-semibold tabular-nums text-slate-900">
+          {slot.time}
+        </div>
+
         <div className="text-xs text-slate-500">
-          {remaining} vaga{remaining === 1 ? "" : "s"}
+          {remaining} vaga{remaining === 1 ? "" : "s"} restantes • {bookedCount}/{capacity} ocupadas
         </div>
       </div>
 

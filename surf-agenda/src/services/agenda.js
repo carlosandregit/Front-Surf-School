@@ -1,10 +1,10 @@
 import { api } from "./api";
 
-function adicionarDias(iso, quantidade) {
-  const data = new Date(`${iso}T00:00:00`);
-  data.setDate(data.getDate() + quantidade);
-  return data.toISOString().slice(0, 10);
-}
+// function adicionarDias(iso, quantidade) {
+//   const data = new Date(`${iso}T00:00:00`);
+//   data.setDate(data.getDate() + quantidade);
+//   return data.toISOString().slice(0, 10);
+// }
 
 function formatarRotuloDia(dataISO) {
   const data = new Date(`${dataISO}T00:00:00`);

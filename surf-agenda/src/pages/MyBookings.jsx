@@ -5,7 +5,9 @@ import {
   consultarAgendamentosDoAluno,
   cancelarAgendamento,
 } from "../services/agendamento";
+import { buscarAlunoPorTelefone } from "../services/admin";
 import CancelSheet from "../components/CancelSheet";
+import SaldoAulasSheet from "../components/SaldoAulasSheet";
 
 export default function MyBookings() {
   const { escolinha } = useOutletContext();
@@ -23,6 +25,9 @@ export default function MyBookings() {
 
   const [cancelOpen, setCancelOpen] = useState(false);
   const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
+
+  const [saldoOpen, setSaldoOpen] = useState(false);
+  const [saldoAluno, setSaldoAluno] = useState(null);
 
   const consultaHabilitada =
     !!escolinha?.idEscolinha &&
@@ -72,6 +77,21 @@ export default function MyBookings() {
     },
   });
 
+  const saldoMutation = useMutation({
+    mutationFn: buscarAlunoPorTelefone,
+    onSuccess: (resposta) => {
+      setSaldoAluno({
+        nomeAluno: resposta.nomeAluno,
+        telefoneAluno: resposta.telefoneAluno,
+        quantidadeAulasDisponiveis: resposta.quantidadeAulasDisponiveis,
+      });
+    },
+    onError: (erro) => {
+      setSaldoAluno(null);
+      alert(erro.message || "Erro ao buscar saldo de aulas.");
+    },
+  });
+
   function handleBuscar() {
     if (!escolinha?.idEscolinha) {
       alert("Escolinha não carregada.");
@@ -107,19 +127,39 @@ export default function MyBookings() {
     setAgendamentoSelecionado(null);
   }
 
+  function abrirSaldoAulas() {
+    setSaldoAluno(null);
+    setSaldoOpen(true);
+  }
+
+  function fecharSaldoAulas() {
+    if (saldoMutation.isPending) return;
+    setSaldoOpen(false);
+    setSaldoAluno(null);
+  }
+
   const resultados = Array.isArray(agendamentosQuery.data)
     ? agendamentosQuery.data
     : [];
 
   return (
     <section className="space-y-4">
-      <div>
-        <h1 className="text-xl font-extrabold text-slate-900">
-          Meus agendamentos
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">
-          Informe a data e seu telefone para consultar suas aulas.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-extrabold text-slate-900">
+            Meus agendamentos
+          </h1>
+          <p className="mt-1 text-sm text-slate-600">
+            Informe a data e seu telefone para consultar suas aulas.
+          </p>
+        </div>
+
+        <button
+          onClick={abrirSaldoAulas}
+          className="rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm font-extrabold text-slate-700 hover:bg-sky-50"
+        >
+          Saldo de aulas
+        </button>
       </div>
 
       <div className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
@@ -139,7 +179,7 @@ export default function MyBookings() {
               Telefone
             </label>
             <input
-               value={telefone}
+              value={telefone}
               onChange={(e) => setTelefone(e.target.value)}
               placeholder="DDD + número"
               className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
@@ -258,6 +298,21 @@ export default function MyBookings() {
             idEscolinha: escolinha.idEscolinha,
             idAgendamento: agendamentoSelecionado.idAgendamento,
             motivoCancelamento: payload.motivoCancelamento,
+          });
+        }}
+      />
+
+      <SaldoAulasSheet
+        open={saldoOpen}
+        onClose={fecharSaldoAulas}
+        carregando={saldoMutation.isPending}
+        resultado={saldoAluno}
+        onBuscar={(payload) => {
+          if (!escolinha?.idEscolinha) return;
+
+          saldoMutation.mutate({
+            idEscolinha: escolinha.idEscolinha,
+            telefoneAluno: payload.telefoneAluno,
           });
         }}
       />

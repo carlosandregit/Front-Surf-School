@@ -13,7 +13,21 @@ export async function bloquearHorario({
   dataDoBloqueio,
   hora,
 }) {
-  const response = await api.post("/Bloquear-Horario", {
+  const response = await api.post("Escolinhas/Bloquear-Horario", {
+    idEscolinha,
+    dataDoBloqueio,
+    hora,
+  });
+
+  return response.data;
+}
+
+export async function desbloquearHorario({
+  idEscolinha,
+  dataDoBloqueio,
+  hora,
+}) {
+  const response = await api.post("Escolinhas/Desbloquear-Horario", {
     idEscolinha,
     dataDoBloqueio,
     hora,

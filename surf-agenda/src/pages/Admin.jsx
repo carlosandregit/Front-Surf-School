@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { consultarAgendaAdminDia } from "../services/agendaAdmin";
 import { cancelarAgendamentoAdmin } from "../services/admin";
-import { bloquearHorario } from "../services/escolinha";
+import { consultarAgendamentoDoDia, consultarAgendaDia } from "../services/agenda";
+import {  bloquearHorario, desbloquearHorario, } from "../services/escolinha";
 import AdminCancelSheet from "../components/AdminCancelSheet";
 
 export default function Admin() {
@@ -20,6 +20,8 @@ export default function Admin() {
   const [cancelOpen, setCancelOpen] = useState(false);
   const [agendamentoSelecionado, setAgendamentoSelecionado] = useState(null);
 
+  const [accordionAgendaOpen, setAccordionAgendaOpen] = useState(false);
+
   const agendaQuery = useQuery({
     queryKey: [
       "agenda-admin-dia",
@@ -29,13 +31,24 @@ export default function Admin() {
       filtroAplicado?.telefoneAluno,
     ],
     queryFn: () =>
-      consultarAgendaAdminDia({
+      consultarAgendamentoDoDia({
         idEscolinha: escolinha.idEscolinha,
         dataDoAgendamento: filtroAplicado.dataDoAgendamento,
         status: filtroAplicado.status || null,
         telefoneAluno: filtroAplicado.telefoneAluno || null,
       }),
     enabled: !!escolinha?.idEscolinha && !!filtroAplicado,
+    retry: false,
+  });
+
+  const agendaHorariosQuery = useQuery({
+    queryKey: ["agendaDia", escolinha?.slug, dataSelecionada],
+    queryFn: () =>
+      consultarAgendaDia({
+        slug: escolinha.slug,
+        dataDoAgendamento: dataSelecionada,
+      }),
+    enabled: !!escolinha?.slug && !!dataSelecionada,
     retry: false,
   });
 
@@ -47,23 +60,7 @@ export default function Admin() {
       setCancelOpen(false);
       setAgendamentoSelecionado(null);
 
-      queryClient.invalidateQueries({
-        queryKey: [
-          "agenda-admin-dia",
-          escolinha?.idEscolinha,
-          filtroAplicado?.dataDoAgendamento,
-          filtroAplicado?.status,
-          filtroAplicado?.telefoneAluno,
-        ],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["agendaDia"],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["agendamentos-aluno"],
-      });
+      invalidarConsultas();
     },
     onError: (erro) => {
       alert(erro.message || "Erro ao cancelar agendamento.");
@@ -74,25 +71,37 @@ export default function Admin() {
     mutationFn: bloquearHorario,
     onSuccess: (resposta) => {
       alert(resposta?.mensagem || "Horário bloqueado com sucesso.");
-
-      queryClient.invalidateQueries({
-        queryKey: [
-          "agenda-admin-dia",
-          escolinha?.idEscolinha,
-          filtroAplicado?.dataDoAgendamento,
-          filtroAplicado?.status,
-          filtroAplicado?.telefoneAluno,
-        ],
-      });
-
-      queryClient.invalidateQueries({
-        queryKey: ["agendaDia"],
-      });
+      invalidarConsultas();
     },
     onError: (erro) => {
       alert(erro.message || "Erro ao bloquear horário.");
     },
   });
+
+  const desbloquearMutation = useMutation({
+    mutationFn: desbloquearHorario,
+    onSuccess: (resposta) => {
+      alert(resposta?.mensagem || "Horário desbloqueado com sucesso.");
+      invalidarConsultas();
+    },
+    onError: (erro) => {
+      alert(erro.message || "Erro ao desbloquear horário.");
+    },
+  });
+
+  function invalidarConsultas() {
+    queryClient.invalidateQueries({
+      queryKey: ["agenda-admin-dia"],
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: ["agendaDia"],
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: ["agendamentos-aluno"],
+    });
+  }
 
   function handleBuscar() {
     if (!escolinha?.idEscolinha) {
@@ -130,32 +139,47 @@ export default function Admin() {
     setAgendamentoSelecionado(null);
   }
 
-  function handleBloquearHorario(agendamento) {
+  function handleBloquearHorario(slot) {
     if (!escolinha?.idEscolinha) return;
 
     const confirmado = window.confirm(
-      `Deseja bloquear o horário ${agendamento.hora} do dia ${formatDateBR(
-        agendamento.dataDoAgendamento
-      )}?`
+      `Deseja bloquear o horário ${slot.time} do dia ${formatDateBR(slot.date)}?`
     );
 
     if (!confirmado) return;
 
     bloquearMutation.mutate({
       idEscolinha: escolinha.idEscolinha,
-      dataDoBloqueio: agendamento.dataDoAgendamento,
-      hora: agendamento.hora,
+      dataDoBloqueio: slot.date,
+      hora: slot.time,
+    });
+  }
+
+  function handleDesbloquearHorario(slot) {
+    if (!escolinha?.idEscolinha) return;
+
+    const confirmado = window.confirm(
+      `Deseja desbloquear o horário ${slot.time} do dia ${formatDateBR(slot.date)}?`
+    );
+
+    if (!confirmado) return;
+
+    desbloquearMutation.mutate({
+      idEscolinha: escolinha.idEscolinha,
+      dataDoBloqueio: slot.date,
+      hora: slot.time,
     });
   }
 
   const resultados = Array.isArray(agendaQuery.data) ? agendaQuery.data : [];
+  const agendaHorarios = agendaHorariosQuery.data;
 
   return (
     <section className="space-y-4">
       <div>
         <h1 className="text-xl font-extrabold text-slate-900">Admin</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Visualize os agendamentos do dia, filtre e faça ações operacionais.
+          Visualize os agendamentos do dia e filtre por status ou telefone.
         </p>
       </div>
 
@@ -203,7 +227,7 @@ export default function Admin() {
           onClick={handleBuscar}
           className="mt-4 w-full rounded-xl bg-slate-900 py-3 text-sm font-extrabold text-white hover:bg-slate-800"
         >
-          Buscar agendamentos
+          Carregar agenda do dia
         </button>
 
         {filtroAplicado ? (
@@ -234,7 +258,7 @@ export default function Admin() {
 
       {!filtroAplicado ? (
         <div className="rounded-2xl border border-sky-100 bg-sky-50/50 p-4 text-sm text-slate-700 shadow-sm">
-          Selecione a data e clique em buscar para visualizar os agendamentos.
+          Selecione a data e clique em carregar para visualizar os agendamentos do dia.
         </div>
       ) : agendaQuery.isFetching ? (
         <div className="rounded-2xl border border-sky-100 bg-white p-4 text-sm text-slate-700 shadow-sm">
@@ -309,24 +333,12 @@ export default function Admin() {
                   </div>
 
                   {agendamento.status === "CONFIRMADO" ? (
-                    <>
-                      <button
-                        onClick={() => abrirCancelamentoAdmin(agendamento)}
-                        className="mt-3 w-full rounded-xl border border-sky-100 px-3 py-2 text-sm font-semibold hover:bg-sky-50"
-                      >
-                        Cancelar (admin)
-                      </button>
-
-                      <button
-                        onClick={() => handleBloquearHorario(agendamento)}
-                        disabled={bloquearMutation.isPending}
-                        className="mt-2 w-full rounded-xl border border-red-100 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
-                      >
-                        {bloquearMutation.isPending
-                          ? "Bloqueando..."
-                          : "Bloquear horário"}
-                      </button>
-                    </>
+                    <button
+                      onClick={() => abrirCancelamentoAdmin(agendamento)}
+                      className="mt-3 rounded-xl border border-sky-100 px-3 py-2 text-sm font-semibold hover:bg-sky-50"
+                    >
+                      Cancelar (admin)
+                    </button>
                   ) : null}
                 </div>
               </div>
@@ -334,6 +346,105 @@ export default function Admin() {
           ))}
         </div>
       )}
+
+      <div className="rounded-2xl border border-sky-100 bg-white shadow-sm">
+        <button
+          type="button"
+          onClick={() => setAccordionAgendaOpen((valorAtual) => !valorAtual)}
+          className="flex w-full items-center justify-between px-4 py-4 text-left"
+        >
+          <div>
+            <div className="text-sm font-extrabold text-slate-900">
+              Agenda de horários do dia
+            </div>
+            <div className="mt-1 text-xs text-slate-500">
+              Use esta área para bloquear e desbloquear horários.
+            </div>
+          </div>
+
+          <span className="text-sm font-bold text-slate-500">
+            {accordionAgendaOpen ? "−" : "+"}
+          </span>
+        </button>
+
+        {accordionAgendaOpen ? (
+          <div className="border-t border-sky-50 px-4 py-4">
+            {agendaHorariosQuery.isFetching ? (
+              <div className="text-sm text-slate-700">Carregando horários...</div>
+            ) : agendaHorariosQuery.isError ? (
+              <div className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-700">
+                {agendaHorariosQuery.error?.message || "Erro ao carregar horários."}
+              </div>
+            ) : !agendaHorarios?.slots?.length ? (
+              <div className="text-sm text-slate-700">
+                Nenhum horário encontrado para este dia.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {agendaHorarios.slots.map((slot) => (
+                  <div
+                    key={slot.id}
+                    className="rounded-xl border border-sky-50 bg-sky-50/30 p-4"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-base font-extrabold text-slate-900">
+                          {slot.time}
+                        </div>
+
+                        <div className="mt-1 text-sm text-slate-600">
+                          {slot.remaining} vaga{slot.remaining === 1 ? "" : "s"} restantes •{" "}
+                          {slot.bookedCount}/{slot.capacity} ocupadas
+                        </div>
+
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {slot.isLocked ? (
+                            <span className="inline-flex rounded-full bg-red-50 px-2 py-1 text-xs font-semibold text-red-700">
+                              Horário bloqueado
+                            </span>
+                          ) : slot.isFull ? (
+                            <span className="inline-flex rounded-full bg-slate-50 px-2 py-1 text-xs font-semibold text-slate-700">
+                              Lotado
+                            </span>
+                          ) : (
+                            <span className="inline-flex rounded-full bg-sky-50 px-2 py-1 text-xs font-semibold text-sky-700">
+                              Disponível
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="min-w-[180px]">
+                        {slot.isLocked ? (
+                          <button
+                            onClick={() => handleDesbloquearHorario(slot)}
+                            disabled={desbloquearMutation.isPending}
+                            className="w-full rounded-xl border border-emerald-100 px-3 py-2 text-sm font-semibold text-emerald-700 hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            {desbloquearMutation.isPending
+                              ? "Desbloqueando..."
+                              : "Desbloquear horário"}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleBloquearHorario(slot)}
+                            disabled={bloquearMutation.isPending}
+                            className="w-full rounded-xl border border-red-100 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            {bloquearMutation.isPending
+                              ? "Bloqueando..."
+                              : "Bloquear horário"}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : null}
+      </div>
 
       <AdminCancelSheet
         open={cancelOpen}

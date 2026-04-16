@@ -25,6 +25,8 @@ export default function Schedule() {
         dataDoAgendamento: dataSelecionada,
       }),
     enabled: !!slug,
+    placeholderData: (previousData) => previousData,
+    retry: false,
   });
 
   const criarAgendamentoMutation = useMutation({
@@ -72,7 +74,7 @@ export default function Schedule() {
     setSelectedSlot(null);
   }
 
-  if (agendaQuery.isLoading) {
+  if (agendaQuery.isLoading && !agendaQuery.data) {
     return <div>Carregando agenda...</div>;
   }
 
