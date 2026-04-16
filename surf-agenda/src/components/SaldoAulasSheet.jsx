@@ -52,10 +52,16 @@ export default function SaldoAulasSheet({
             <label className="text-xs font-semibold text-slate-700">
               Telefone
             </label>
+
             <input
               value={telefone}
-              onChange={(e) => setTelefone(e.target.value)}
+              onChange={(e) => {
+                const apenasNumeros = e.target.value.replace(/\D/g, '');
+                setTelefone(apenasNumeros);
+              }}
               placeholder="DDD + número"
+              type="tel"
+              inputMode="numeric"
               className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
             />
           </div>

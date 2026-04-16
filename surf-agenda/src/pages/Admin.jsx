@@ -214,10 +214,21 @@ export default function Admin() {
             <label className="text-xs font-semibold text-slate-700">
               Telefone (opcional)
             </label>
-            <input
+            {/* <input
               value={telefoneAluno}
               onChange={(e) => setTelefoneAluno(e.target.value)}
               placeholder="DDD + número"
+              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+            /> */}
+            <input
+              value={telefoneAluno}
+              onChange={(e) => {
+                const apenasNumeros = e.target.value.replace(/\D/g, '');
+                setTelefoneAluno(apenasNumeros);
+              }}
+              placeholder="DDD + número"
+              type="tel"
+              inputMode="numeric"
               className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
             />
           </div>
