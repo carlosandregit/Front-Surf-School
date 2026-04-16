@@ -7,6 +7,7 @@ import DaySwitcher from "../components/DaySwitcher";
 import { consultarAgendaDia } from "../services/agenda";
 import { criarAgendamento } from "../services/agendamento";
 import { addDaysISO, getTodayISO } from "../utils/data";
+import toast from "react-hot-toast";
 
 export default function Schedule() {
   const { slug } = useParams();
@@ -33,13 +34,8 @@ export default function Schedule() {
     mutationFn: criarAgendamento,
 
     onSuccess: (resposta) => {
-      const codigoCancelamento = resposta?.resp?.codigoCancelamento || "";
 
-      alert(
-        codigoCancelamento
-          ? `✅ Aula confirmada!\n\nCódigo de cancelamento: ${codigoCancelamento}`
-          : "✅ Aula confirmada com sucesso!"
-      );
+      toast.success("✅ Aula confirmada com sucesso!");
 
       setSheetOpen(false);
       setSelectedSlot(null);
@@ -50,7 +46,7 @@ export default function Schedule() {
     },
     
     onError: (erro) => {
-      alert(erro.message || "Erro ao confirmar agendamento.");
+      toast.error(erro.message || "Erro ao confirmar agendamento.");
     },
   });
 

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate, useOutletContext } from "react-router-dom";
 import { loginAdmin } from "../services/adminAuth";
+import toast from "react-hot-toast";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
@@ -16,7 +17,7 @@ export default function AdminLogin() {
       navigate(`/${escolinha.slug}/admin`, { replace: true });
     },
     onError: (erro) => {
-      alert(erro.message || "Erro ao entrar no admin.");
+      toast.error(erro.message || "Erro ao entrar no admin.");
     },
   });
 
@@ -24,17 +25,17 @@ export default function AdminLogin() {
     e.preventDefault();
 
     if (!escolinha?.idEscolinha) {
-      alert("Escolinha não carregada.");
+      toast("Escolinha não carregada.");
       return;
     }
 
     if (!email.trim()) {
-      alert("Informe o e-mail.");
+      toast("Informe o e-mail.");
       return;
     }
 
     if (!dataNascimento) {
-      alert("Informe a data de nascimento.");
+      toast("Informe a data de nascimento.");
       return;
     }
 

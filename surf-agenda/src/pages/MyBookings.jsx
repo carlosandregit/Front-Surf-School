@@ -7,6 +7,7 @@ import {
 } from "../services/agendamento";
 import { buscarAlunoPorTelefone } from "../services/admin";
 import CancelSheet from "../components/CancelSheet";
+import toast from "react-hot-toast";
 
 export default function MyBookings() {
   const { escolinha } = useOutletContext();
@@ -54,7 +55,7 @@ export default function MyBookings() {
   const cancelarMutation = useMutation({
     mutationFn: cancelarAgendamento,
     onSuccess: (resposta) => {
-      alert(resposta?.mensagem || "Agendamento cancelado com sucesso.");
+      toast.success(resposta?.mensagem || "Agendamento cancelado com sucesso.");
 
       setCancelOpen(false);
       setAgendamentoSelecionado(null);
@@ -73,7 +74,7 @@ export default function MyBookings() {
       });
     },
     onError: (erro) => {
-      alert(erro.message || "Erro ao cancelar agendamento.");
+      toast.error(erro.message || "Erro ao cancelar agendamento.");
     },
   });
 
@@ -88,23 +89,23 @@ export default function MyBookings() {
     },
     onError: (erro) => {
       setSaldoAluno(null);
-      alert(erro.message || "Erro ao buscar saldo de aulas.");
+      toast.error(erro.message || "Erro ao buscar saldo de aulas.");
     },
   });
 
   function handleBuscar() {
     if (!escolinha?.idEscolinha) {
-      alert("Escolinha não carregada.");
+      toast("Escolinha não carregada.");
       return;
     }
 
     if (!isValidISODate(dataSelecionada)) {
-      alert("Selecione uma data válida.");
+      toast("Selecione uma data válida.");
       return;
     }
 
     if (telefoneDigits.length < 10) {
-      alert("Digite um telefone válido com DDD.");
+      toast("Digite um telefone válido com DDD.");
       return;
     }
 
@@ -129,14 +130,14 @@ export default function MyBookings() {
 
   function handleBuscarSaldo() {
     if (!escolinha?.idEscolinha) {
-      alert("Escolinha não carregada.");
+      toast("Escolinha não carregada.");
       return;
     }
 
     const telefoneLimpo = digitsOnly(telefoneSaldo);
 
     if (telefoneLimpo.length < 10) {
-      alert("Digite um telefone válido com DDD.");
+      toast("Digite um telefone válido com DDD.");
       return;
     }
 

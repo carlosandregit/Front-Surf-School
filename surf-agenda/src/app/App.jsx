@@ -3,6 +3,7 @@ import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { clearAdminToken, isAdminAuthenticated } from "../services/adminAuth";
 import { obterEscolinhaPorSlug } from "../services/escolinha";
+import { Toaster } from "react-hot-toast";
 
 function NavItem({ to, children }) {
   return (
@@ -46,6 +47,8 @@ export default function App() {
   }
 
   const escolinha = escolinhaQuery.data;
+
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-sky-50 via-white to-amber-50">

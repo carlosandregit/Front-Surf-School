@@ -7,6 +7,7 @@ import { bloquearHorario, desbloquearHorario } from "../services/escolinha";
 import AdminCancelSheet from "../components/AdminCancelSheet";
 import DaySwitcher from "../components/DaySwitcher";
 import { addDaysISO, getTodayISO } from "../utils/data";
+import toast from "react-hot-toast";
 
 export default function Admin() {
   const { escolinha } = useOutletContext();
@@ -65,62 +66,60 @@ export default function Admin() {
   const cancelarAdminMutation = useMutation({
     mutationFn: cancelarAgendamentoAdmin,
     onSuccess: (resposta) => {
-      alert(resposta?.mensagem || "Agendamento cancelado com sucesso.");
+      toast.success(resposta?.mensagem || "Agendamento cancelado com sucesso.");
       setCancelOpen(false);
       setAgendamentoSelecionado(null);
       invalidarConsultas();
     },
     onError: (erro) => {
-      alert(erro.message || "Erro ao cancelar agendamento.");
+      toast.error(erro.message || "Erro ao cancelar agendamento.");
     },
   });
 
   const bloquearMutation = useMutation({
     mutationFn: bloquearHorario,
     onSuccess: (resposta) => {
-      alert(resposta?.mensagem || "Horário bloqueado com sucesso.");
+      toast.success(resposta?.mensagem || "Horário bloqueado com sucesso.");
       invalidarConsultas();
     },
     onError: (erro) => {
-      alert(erro.message || "Erro ao bloquear horário.");
+      toast.error(erro.message || "Erro ao bloquear horário.");
     },
   });
 
   const desbloquearMutation = useMutation({
     mutationFn: desbloquearHorario,
     onSuccess: (resposta) => {
-      alert(resposta?.mensagem || "Horário desbloqueado com sucesso.");
+      toast.success(resposta?.mensagem || "Horário desbloqueado com sucesso.");
       invalidarConsultas();
     },
     onError: (erro) => {
-      alert(erro.message || "Erro ao desbloquear horário.");
+      toast.error(erro.message || "Erro ao desbloquear horário.");
     },
   });
 
   const criarAlunoMutation = useMutation({
     mutationFn: criarAluno,
     onSuccess: (resposta) => {
-      alert(`Aluno cadastrado com sucesso.\n\nNome: ${resposta.nomeAluno}\nTelefone: ${resposta.telefoneAluno}`);
+      toast.success("Aluno cadastrado com sucesso.");
       setNomeNovoAluno("");
       setTelefoneNovoAluno("");
       setSaldoNovoAluno("0");
     },
     onError: (erro) => {
-      alert(erro.message || "Erro ao cadastrar aluno.");
+      toast.error(erro.message || "Erro ao cadastrar aluno.");
     },
   });
 
   const atualizarSaldoMutation = useMutation({
     mutationFn: atualizarSaldoAulas,
     onSuccess: (resposta) => {
-      alert(
-        `Saldo atualizado com sucesso.\n\nNome: ${resposta.nomeAluno}\nTelefone: ${resposta.telefoneAluno}\nSaldo: ${resposta.quantidadeAulasDisponiveis}`
-      );
+      toast.success("Saldo atualizado com sucesso.");
       setTelefoneSaldo("");
       setNovoSaldo("");
     },
     onError: (erro) => {
-      alert(erro.message || "Erro ao atualizar saldo.");
+      toast.error(erro.message || "Erro ao atualizar saldo.");
     },
   });
 
@@ -132,19 +131,19 @@ export default function Admin() {
 
   function handleBuscar() {
     if (!escolinha?.idEscolinha) {
-      alert("Escolinha não carregada.");
+      toast("Escolinha não carregada.");
       return;
     }
 
     if (!isValidISODate(dataSelecionada)) {
-      alert("Selecione uma data válida.");
+      toast("Selecione uma data válida.");
       return;
     }
 
     const telefoneLimpo = digitsOnly(telefoneAluno);
 
     if (telefoneAluno.trim() && telefoneLimpo.length < 10) {
-      alert("Se for filtrar por telefone, informe um número válido com DDD.");
+      toast("Se for filtrar por telefone, informe um número válido com DDD.");
       return;
     }
 
@@ -208,7 +207,7 @@ export default function Admin() {
 
   function handleCriarAluno() {
     if (!escolinha?.idEscolinha) {
-      alert("Escolinha não carregada.");
+      toast("Escolinha não carregada.");
       return;
     }
 
@@ -216,17 +215,17 @@ export default function Admin() {
     const saldo = Number(saldoNovoAluno);
 
     if (!nomeNovoAluno.trim()) {
-      alert("Informe o nome do aluno.");
+      toast("Informe o nome do aluno.");
       return;
     }
 
     if (telefoneLimpo.length < 10) {
-      alert("Informe um telefone válido com DDD.");
+      toast("Informe um telefone válido com DDD.");
       return;
     }
 
     if (Number.isNaN(saldo) || saldo < 0) {
-      alert("Informe um saldo válido.");
+      toast("Informe um saldo válido.");
       return;
     }
 
@@ -240,7 +239,7 @@ export default function Admin() {
 
   function handleAtualizarSaldo() {
     if (!escolinha?.idEscolinha) {
-      alert("Escolinha não carregada.");
+      toast("Escolinha não carregada.");
       return;
     }
 
@@ -248,12 +247,12 @@ export default function Admin() {
     const saldo = Number(novoSaldo);
 
     if (telefoneLimpo.length < 10) {
-      alert("Informe um telefone válido com DDD.");
+      toast("Informe um telefone válido com DDD.");
       return;
     }
 
     if (Number.isNaN(saldo) || saldo < 0) {
-      alert("Informe um saldo válido.");
+      toast("Informe um saldo válido.");
       return;
     }
 
