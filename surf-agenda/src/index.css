@@ -13,18 +13,3 @@ body,
   max-width: 100%;
   overflow-x: hidden;
 }
-
-input,
-select,
-textarea,
-button {
-  max-width: 100%;
-  box-sizing: border-box;
-}
-
-input[type="date"] {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  min-inline-size: 0;
-}
