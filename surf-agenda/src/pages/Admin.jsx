@@ -8,6 +8,7 @@ import AdminCancelSheet from "../components/AdminCancelSheet";
 import DaySwitcher from "../components/DaySwitcher";
 import { addDaysISO, getTodayISO } from "../utils/data";
 import toast from "react-hot-toast";
+import ConfirmacaoSheet from "../components/ConfirmacaoSheet";
 
 export default function Admin() {
   const { escolinha } = useOutletContext();
@@ -31,6 +32,9 @@ export default function Admin() {
 
   const [telefoneSaldo, setTelefoneSaldo] = useState("");
   const [novoSaldo, setNovoSaldo] = useState("");
+
+  const [confirmacaoOpen, setConfirmacaoOpen] = useState(false);
+  const [acaoConfirmacao, setAcaoConfirmacao] = useState(null);
 
   const agendaQuery = useQuery({
     queryKey: [
@@ -168,33 +172,37 @@ export default function Admin() {
   function handleBloquearHorario(slot) {
     if (!escolinha?.idEscolinha) return;
 
-    const confirmado = window.confirm(
-      `Deseja bloquear o horário ${slot.time} do dia ${formatDateBR(slot.date)}?`
-    );
-
-    if (!confirmado) return;
-
-    bloquearMutation.mutate({
-      idEscolinha: escolinha.idEscolinha,
-      dataDoBloqueio: slot.date,
-      hora: slot.time,
+    setAcaoConfirmacao({
+      tipo: "bloquear",
+      titulo: "Bloquear horário",
+      mensagem: `Deseja bloquear o horário ${slot.time} do dia ${formatDateBR(slot.date)}?`,
+      textoConfirmar: "Bloquear",
+      payload: {
+        idEscolinha: escolinha.idEscolinha,
+        dataDoBloqueio: slot.date,
+        hora: slot.time,
+      },
     });
+
+    setConfirmacaoOpen(true);
   }
 
   function handleDesbloquearHorario(slot) {
     if (!escolinha?.idEscolinha) return;
 
-    const confirmado = window.confirm(
-      `Deseja desbloquear o horário ${slot.time} do dia ${formatDateBR(slot.date)}?`
-    );
-
-    if (!confirmado) return;
-
-    desbloquearMutation.mutate({
-      idEscolinha: escolinha.idEscolinha,
-      dataDoBloqueio: slot.date,
-      hora: slot.time,
+    setAcaoConfirmacao({
+      tipo: "desbloquear",
+      titulo: "Desbloquear horário",
+      mensagem: `Deseja desbloquear o horário ${slot.time} do dia ${formatDateBR(slot.date)}?`,
+      textoConfirmar: "Desbloquear",
+      payload: {
+        idEscolinha: escolinha.idEscolinha,
+        dataDoBloqueio: slot.date,
+        hora: slot.time,
+      },
     });
+
+    setConfirmacaoOpen(true);
   }
 
   function handlePrev() {
@@ -265,6 +273,30 @@ export default function Admin() {
 
   const resultados = Array.isArray(agendaQuery.data) ? agendaQuery.data : [];
   const agendaHorarios = agendaHorariosQuery.data;
+
+  function confirmarAcaoHorario() {
+    if (!acaoConfirmacao) return;
+
+    if (acaoConfirmacao.tipo === "bloquear") {
+      bloquearMutation.mutate(acaoConfirmacao.payload, {
+        onSettled: () => {
+          setConfirmacaoOpen(false);
+          setAcaoConfirmacao(null);
+        },
+      });
+
+      return;
+    }
+
+    if (acaoConfirmacao.tipo === "desbloquear") {
+      desbloquearMutation.mutate(acaoConfirmacao.payload, {
+        onSettled: () => {
+          setConfirmacaoOpen(false);
+          setAcaoConfirmacao(null);
+        },
+      });
+    }
+  }
 
   return (
     <section className="space-y-4">
@@ -706,6 +738,23 @@ export default function Admin() {
           });
         }}
       />
+
+      <ConfirmacaoSheet
+        open={confirmacaoOpen}
+        titulo={acaoConfirmacao?.titulo}
+        mensagem={acaoConfirmacao?.mensagem}
+        textoConfirmar={acaoConfirmacao?.textoConfirmar}
+        textoCancelar="Voltar"
+        tipo={acaoConfirmacao?.tipo === "bloquear" ? "perigo" : "padrao"}
+        carregando={bloquearMutation.isPending || desbloquearMutation.isPending}
+        onClose={() => {
+          if (bloquearMutation.isPending || desbloquearMutation.isPending) return;
+          setConfirmacaoOpen(false);
+          setAcaoConfirmacao(null);
+        }}
+        onConfirm={confirmarAcaoHorario}
+      />
+      
     </section>
   );
 }
