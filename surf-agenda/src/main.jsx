@@ -15,13 +15,22 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <Toaster
         position="bottom-center"
         toastOptions={{
-          duration: 500,
+          duration: 1200,
+          removeDelay: 150,
           style: {
             borderRadius: "12px",
             background: "#0f172a",
             color: "#fff",
             fontSize: "14px",
             padding: "12px 16px",
+          },
+          success: {
+            duration: 1000,
+            removeDelay: 150,
+          },
+          error: {
+            duration: 1000,
+            removeDelay: 150,
           },
         }}
       />

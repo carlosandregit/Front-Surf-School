@@ -70,7 +70,7 @@ export default function AdminLogin() {
           />
         </div>
 
-        <div>
+        <div className="min-w-0">
           <label className="text-xs font-semibold text-slate-700">
             Data de nascimento
           </label>
@@ -78,7 +78,7 @@ export default function AdminLogin() {
             type="date"
             value={dataNascimento}
             onChange={(e) => setDataNascimento(e.target.value)}
-            className="mt-2 block w-full min-w-0 max-w-full box-border rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+            className="mt-2 block h-[52px] min-h-[52px] w-full min-w-0 max-w-full box-border rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
             // className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
           />
         </div>
