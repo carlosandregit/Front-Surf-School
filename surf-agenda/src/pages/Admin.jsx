@@ -9,6 +9,7 @@ import DaySwitcher from "../components/DaySwitcher";
 import { addDaysISO, getTodayISO } from "../utils/data";
 import toast from "react-hot-toast";
 import ConfirmacaoSheet from "../components/ConfirmacaoSheet";
+import CampoData from "../components/CampoData";
 
 export default function Admin() {
   const { escolinha } = useOutletContext();
@@ -309,13 +310,17 @@ export default function Admin() {
 
       <div className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
         <div className="grid gap-3 sm:grid-cols-3">
-          <div>
+          <div className="min-w-0">
             <label className="text-xs font-semibold text-slate-700">Data</label>
-            <input
+            {/* <input
               type="date"
               value={dataSelecionada}
               onChange={(e) => setDataSelecionada(e.target.value)}              
               className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+            /> */}
+            <CampoData
+              value={dataSelecionada}
+              onChange={setDataSelecionada}
             />
           </div>
 
