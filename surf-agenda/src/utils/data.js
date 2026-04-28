@@ -1,11 +1,23 @@
-export function addDaysISO(dataISO, quantidade) {
+export function addDaysISO(dataISO, quantidadeDias) {
   const data = new Date(`${dataISO}T00:00:00`);
-  data.setDate(data.getDate() + quantidade);
-  return data.toISOString().slice(0, 10);
+
+  data.setDate(data.getDate() + quantidadeDias);
+
+  const ano = data.getFullYear();
+  const mes = String(data.getMonth() + 1).padStart(2, "0");
+  const dia = String(data.getDate()).padStart(2, "0");
+
+  return `${ano}-${mes}-${dia}`;
 }
 
 export function getTodayISO() {
-  return new Date().toISOString().slice(0, 10);
+  const hoje = new Date();
+
+  const ano = hoje.getFullYear();
+  const mes = String(hoje.getMonth() + 1).padStart(2, "0");
+  const dia = String(hoje.getDate()).padStart(2, "0");
+
+  return `${ano}-${mes}-${dia}`;
 }
 
 export function formatarFaixaData(dataISO) {
