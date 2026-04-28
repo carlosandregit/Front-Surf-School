@@ -172,8 +172,9 @@ export default function MyBookings() {
             <input
               type="date"
               value={dataSelecionada}
-              onChange={(e) => setDataSelecionada(e.target.value)}              
-              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+              onChange={(e) => setDataSelecionada(e.target.value)}        
+              className="mt-2 block w-[90%] min-w-0 max-w-[90%] rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"      
+              // className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
             />
           </div>
 
