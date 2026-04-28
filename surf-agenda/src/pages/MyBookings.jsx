@@ -162,9 +162,12 @@ export default function MyBookings() {
         </p>
       </div>
 
-      <div className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="min-w-0">
+      {/* <div className="rounded-2xl border border-sky-100 bg-white p-4 shadow-sm"> */}
+      <div className="w-full max-w-full overflow-hidden rounded-2xl border border-sky-100 bg-white p-4 shadow-sm">
+        {/* <div className="grid gap-3 sm:grid-cols-2"> */}
+        <div className="grid w-full max-w-full grid-cols-1 gap-3 sm:grid-cols-2">
+          {/* <div className="min-w-0"> */}
+          <div className="w-full min-w-0 max-w-full">
             <label className="text-xs font-semibold text-slate-700">Data</label>
             <input
               type="date"
