@@ -47,7 +47,7 @@ export default function BookingSheet({ open, slot, onClose, onConfirm }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Seu nome"
-              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-base outline-none focus:ring-2 focus:ring-sky-200"
             />
           </div>
 
@@ -69,7 +69,7 @@ export default function BookingSheet({ open, slot, onClose, onConfirm }) {
                 placeholder="DDD + número"
                 type="tel"
                 inputMode="numeric"
-                className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+                className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-base outline-none focus:ring-2 focus:ring-sky-200"
             />
             <div className="mt-2 text-xs text-slate-500">
               Usaremos seu telefone para você consultar e cancelar dentro do prazo.

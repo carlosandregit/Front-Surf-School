@@ -67,7 +67,7 @@ export default function AdminLogin() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="admin@surfschool.com"
-            className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+            className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-base outline-none focus:ring-2 focus:ring-sky-200"
           />
         </div>
 

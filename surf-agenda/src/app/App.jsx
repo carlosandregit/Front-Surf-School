@@ -55,17 +55,17 @@ export default function App() {
       <header className="sticky top-0 z-50 border-b bg-white/70 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
           <div className="flex items-center gap-2">
-            {/* <span className="text-lg">🏄🏽</span>
+            <span className="text-lg">🏄🏽</span>
             <span className="text-sm font-extrabold tracking-tight text-slate-900">
               {escolinha.nomeEscolinha}
-            </span> */}
-            {escolinha?.urlLogo && (
+            </span>
+            {/* {escolinha?.urlLogo && (
               <img
                 src={escolinha.urlLogo}
                 alt={escolinha.nomeEscolinha}
                 className="h-10 w-auto object-contain"
               />
-            )}
+            )} */}
           </div>
 
           <div className="flex items-center gap-2">

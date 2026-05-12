@@ -350,7 +350,7 @@ export default function Admin() {
               placeholder="DDD + número"
               type="tel"
               inputMode="numeric"
-              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-base outline-none focus:ring-2 focus:ring-sky-200"
             />
           </div>
         </div>
@@ -619,7 +619,7 @@ export default function Admin() {
                 <input
                   value={nomeNovoAluno}
                   onChange={(e) => setNomeNovoAluno(e.target.value)}
-                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-base outline-none focus:ring-2 focus:ring-sky-200"
                 />
               </div>
 
@@ -634,7 +634,7 @@ export default function Admin() {
                   }
                   type="tel"
                   inputMode="numeric"
-                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-base outline-none focus:ring-2 focus:ring-sky-200"
                 />
               </div>
 
@@ -648,7 +648,7 @@ export default function Admin() {
                     setSaldoNovoAluno(e.target.value.replace(/\D/g, ""))
                   }
                   inputMode="numeric"
-                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-base outline-none focus:ring-2 focus:ring-sky-200"
                 />
               </div>
             </div>
@@ -698,7 +698,7 @@ export default function Admin() {
                   }
                   type="tel"
                   inputMode="numeric"
-                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-base outline-none focus:ring-2 focus:ring-sky-200"
                 />
               </div>
 
@@ -712,7 +712,7 @@ export default function Admin() {
                     setNovoSaldo(e.target.value.replace(/\D/g, ""))
                   }
                   inputMode="numeric"
-                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+                  className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-base outline-none focus:ring-2 focus:ring-sky-200"
                 />
               </div>
             </div>
