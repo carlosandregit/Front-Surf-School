@@ -47,19 +47,12 @@ export default function BookingSheet({ open, slot, onClose, onConfirm }) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Seu nome"
-              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-base outline-none focus:ring-2 focus:ring-sky-200"
+              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-[16px] outline-none focus:ring-2 focus:ring-sky-200"
             />
           </div>
 
           <div>
             <label className="text-xs font-semibold text-slate-700"><strong>Telefone</strong></label>
-            {/* <input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="DDD + número"
-              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-sky-200"
-            /> */}
-            {/* para aceitar apenas numeros */}
             <input
                 value={phone}
                 onChange={(e) => {
@@ -69,7 +62,7 @@ export default function BookingSheet({ open, slot, onClose, onConfirm }) {
                 placeholder="DDD + número"
                 type="tel"
                 inputMode="numeric"
-                className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-base outline-none focus:ring-2 focus:ring-sky-200"
+                className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-[16px] outline-none focus:ring-2 focus:ring-sky-200"
             />
             <div className="mt-2 text-xs text-slate-500">
               Usaremos seu telefone para você consultar e cancelar dentro do prazo.
@@ -87,15 +80,22 @@ export default function BookingSheet({ open, slot, onClose, onConfirm }) {
           </div>
 
           <div >
-                  {/* className="mt-2 w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-4 text-lg font-semibold text-gray-800 outline-none transition-all duration-200 focus:border-gray-300 focus:bg-white focus:ring-2 focus:ring-gray-200" */}
-                <select className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-4 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+
+            {/* <select className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-4 text-sm outline-none focus:ring-2 focus:ring-sky-200"
                   value={tipoReserva} onChange={(e) => setTipoReserva(e.target.value)}>
                   <option value=""  className="text-base font-normal text-gray-400">Selecione uma opção</option>
                   <option value="PACOTE" className="text-sm font-bold text-gray-500">PACOTE</option>
                   <option value="AVULSA" className="text-sm font-bold text-gray-500">AVULSA</option>
-              </select>
-              
-            </div>
+              </select> */}
+
+            <select className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-4 text-[16px] outline-none focus:ring-2 focus:ring-sky-200"
+              value={tipoReserva} onChange={(e) => setTipoReserva(e.target.value)}>
+              <option value="">Selecione uma opção</option>
+              <option value="PACOTE">PACOTE</option>
+              <option value="AVULSA">AVULSA</option>
+            </select>
+
+          </div>
 
           <button
             disabled={!canSubmit}

@@ -38,7 +38,7 @@ export default function AdminAddBookingSheet({ open, slot, onClose, onConfirm })
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Nome do aluno"
-              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-base outline-none focus:ring-2 focus:ring-sky-200"
+              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-[16px] outline-none focus:ring-2 focus:ring-sky-200"
             />
           </div>
 
@@ -48,7 +48,7 @@ export default function AdminAddBookingSheet({ open, slot, onClose, onConfirm })
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="DDD + número"
-              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-base outline-none focus:ring-2 focus:ring-sky-200"
+              className="mt-2 w-full rounded-xl border border-sky-100 bg-white px-4 py-3 text-[16px] outline-none focus:ring-2 focus:ring-sky-200"
             />
             <div className="mt-2 text-xs text-slate-500">Será usado para consulta/cancelamento.</div>
           </div>
