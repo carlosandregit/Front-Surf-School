@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink, Outlet, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { clearAdminToken, isAdminAuthenticated } from "../services/adminAuth";
+import { isAdminAuthenticated, logoutAdmin } from "../services/adminAuth";
 import { obterEscolinhaPorSlug } from "../services/escolinha";
 import { Toaster } from "react-hot-toast";
 
@@ -25,16 +25,16 @@ function NavItem({ to, children }) {
 export default function App() {
   const navigate = useNavigate();
   const { slug } = useParams();
-  const isAdmin = isAdminAuthenticated();
-
   const escolinhaQuery = useQuery({
     queryKey: ["escolinha", slug],
     queryFn: () => obterEscolinhaPorSlug(slug),
     enabled: !!slug,
   });
 
-  function handleLogout() {
-    clearAdminToken();
+  const isAdmin = isAdminAuthenticated(escolinhaQuery.data?.idEscolinha);
+
+  async function handleLogout() {
+    await logoutAdmin();
     navigate(`/${slug}/admin/login`, { replace: true });
   }
 

@@ -4,8 +4,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   consultarAgendamentosDoAluno,
   cancelarAgendamento,
+  consultarSaldoDoAluno,
 } from "../services/agendamento";
-import { buscarAlunoPorTelefone } from "../services/admin";
 import CancelSheet from "../components/CancelSheet";
 import toast from "react-hot-toast";
 import CampoData from "../components/CampoData";
@@ -80,7 +80,7 @@ export default function MyBookings() {
   });
 
   const saldoMutation = useMutation({
-    mutationFn: buscarAlunoPorTelefone,
+    mutationFn: consultarSaldoDoAluno,
     onSuccess: (resposta) => {
       setSaldoAluno({
         nomeAluno: resposta.nomeAluno,
@@ -376,6 +376,7 @@ export default function MyBookings() {
           cancelarMutation.mutate({
             idEscolinha: escolinha.idEscolinha,
             idAgendamento: agendamentoSelecionado.idAgendamento,
+            telefoneAluno: agendamentoSelecionado.telefoneAluno,
             motivoCancelamento: payload.motivoCancelamento,
           });
         }}

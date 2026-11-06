@@ -1,54 +1,47 @@
-import { api } from "./api";
+import { apiAuth } from "./api";
+import { limparToken, obterSessaoAdmin, salvarToken } from "./sessaoAdmin";
 
-const CHAVE_ADMIN = "admin_session";
+export { obterSessaoAdmin };
 
-export async function loginAdmin({ idEscolinha, email, dataNascimento }) {
-  const response = await api.post("/Admin/Usuario", {
-    idEscolinha,
-    email,
-    dataNascimento,
-  });
-
-  const usuario = response.data;
-
-  if (!usuario) {
-    throw new Error("Usuário admin não encontrado.");
-  }
-
-  if (!usuario.ativo) {
-    throw new Error("Usuário admin inativo.");
-  }
-
-  const sessao = {
-    idUsuario: usuario.idUsuario,
-    idEscolinha: usuario.idEscolinha,
-    nomeUsuario: usuario.nomeUsuario,
-    email: usuario.email,
-    dtNascimento: usuario.dtNascimento,
-    ativo: usuario.ativo,
-  };
-
-  localStorage.setItem(CHAVE_ADMIN, JSON.stringify(sessao));
-
-  return sessao;
-}
-
-export function obterSessaoAdmin() {
-  const bruto = localStorage.getItem(CHAVE_ADMIN);
-  if (!bruto) return null;
-
+export async function loginAdmin({ idEscolinha, email, senha }) {
   try {
-    return JSON.parse(bruto);
-  } catch {
-    return null;
+    const response = await apiAuth.post("/AdminAuth/login", {
+      idEscolinha,
+      email,
+      senha,
+    });
+    salvarToken(response.data.accessToken);
+    return obterSessaoAdmin();
+  } catch (error) {
+    const status = error?.response?.status;
+    if (status === 401) throw new Error("E-mail ou senha inválidos.");
+    if (status === 429) throw new Error("Muitas tentativas. Aguarde um minuto e tente novamente.");
+    throw new Error(error?.response?.data?.mensagem || "Não foi possível entrar. Tente novamente.");
   }
 }
 
-export function isAdminAuthenticated() {
+export async function logoutAdmin() {
+  try {
+    await apiAuth.post("/AdminAuth/logout");
+  } catch {
+    // mesmo se a API falhar, a sessão local é encerrada
+  } finally {
+    limparToken();
+  }
+}
+
+/**
+ * true se existe sessão de admin para ESTA escolinha.
+ * Um token vencido ainda conta: a primeira chamada à API renova automaticamente
+ * (ou manda para o login, se a renovação também tiver expirado).
+ */
+export function isAdminAuthenticated(idEscolinha) {
   const sessao = obterSessaoAdmin();
-  return !!sessao?.idUsuario && sessao?.ativo === true;
+  if (!sessao?.idUsuario) return false;
+  if (idEscolinha && sessao.idEscolinha !== Number(idEscolinha)) return false;
+  return true;
 }
 
 export function clearAdminToken() {
-  localStorage.removeItem(CHAVE_ADMIN);
+  limparToken();
 }

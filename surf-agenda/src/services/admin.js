@@ -1,14 +1,7 @@
 import { api } from "./api";
 
-
-export async function usuarioLogin({ email, dtNascimento }) {
-  const response = await api.post("/Admin/Usuario", {
-    email,
-    dataDoAgendamento: dtNascimento
-  });
-
-  return response.data;
-}
+// Todas as rotas daqui exigem login de admin (o token vai automaticamente pelo api.js).
+// A API usa a escolinha do token; o idEscolinha enviado é ignorado.
 
 export async function cancelarAgendamentoAdmin({
   idAgendamento,
